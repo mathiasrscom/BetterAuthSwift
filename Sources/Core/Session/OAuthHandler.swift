@@ -40,28 +40,30 @@ class OAuthHandler: NSObject {
         url: url,
         callbackURLScheme: callbackURLScheme
       ) { [weak self] callbackURL, error in
-        if let error = error {
-          self?.completion?(.failure(error))
-        } else if let callbackURL = callbackURL {
-          guard let cookie = self?.extractCookieFromCallback(callbackURL) else {
-            self?.completion?(
-              .failure(
-                BetterAuthSwiftError(
-                  message: "Failed to extract session cookie from callback URL"
+        DispatchQueue.main.async {
+          if let error = error {
+            self?.completion?(.failure(error))
+          } else if let callbackURL = callbackURL {
+            guard let cookie = self?.extractCookieFromCallback(callbackURL) else {
+              self?.completion?(
+                .failure(
+                  BetterAuthSwiftError(
+                    message: "Failed to extract session cookie from callback URL"
+                  )
                 )
               )
+              return
+            }
+            self?.completion?(.success(cookie))
+          } else {
+            self?.completion?(
+              .failure(BetterAuthSwiftError(message: "No callback URL received"))
             )
-            return
           }
-          self?.completion?(.success(cookie))
-        } else {
-          self?.completion?(
-            .failure(BetterAuthSwiftError(message: "No callback URL received"))
-          )
-        }
 
-        self?.webAuthSession = nil
-        self?.completion = nil
+          self?.webAuthSession = nil
+          self?.completion = nil
+        }
       }
 
       webAuthSession?.presentationContextProvider = self
