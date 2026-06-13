@@ -54,7 +54,14 @@ class OAuthHandler: NSObject {
       session.presentationContextProvider = self
       session.prefersEphemeralWebBrowserSession = false
       self.webAuthSession = session
-      session.start()
+      if !session.start() {
+        self.webAuthSession = nil
+        continuation.resume(
+          throwing: BetterAuthSwiftError(
+            message: "Failed to start web authentication session"
+          )
+        )
+      }
     }
   }
 
